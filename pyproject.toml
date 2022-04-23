@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "mini-aspire"
+version = "1.0.0"
+description = "mini-aspire API"
+authors = ["Mohammed Rishad <mohammedrishad.vk@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+Django = "3.2.13"
+djangorestframework = "3.13.1"
+PyYAML = "6.0"
+uritemplate = "4.1.1"
+drf-spectacular = "0.22.0"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
