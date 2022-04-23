@@ -20,6 +20,6 @@ class LoanAdmin(admin.ModelAdmin):
         "loan__user__email", "status"
     )
     list_display = (
-        "id", "loan", "amount", "due_date", "status", "payment_date"
+        "id", "loan", "amount", "due_date", "status", "paid_date"
     )
-    list_filter = ("due_date", "status", "payment_date")
+    list_filter = ("due_date", "status", "paid_date")

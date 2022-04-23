@@ -25,11 +25,11 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/login/', obtain_auth_token, name='token_login'),
     path('api/auth/register/', RegisterUserView.as_view(), name='register'),
-    path('api/v1/loans/', include('apps.loans.urls')),
+    path('api/loans/', include('apps.loans.urls')),
 
     # Swagger
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    path('redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    path('redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc')
 ]
 

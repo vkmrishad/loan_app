@@ -1,5 +1,6 @@
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
-from apps.loans.models import Loan
+from apps.loans.models import Loan, LoanTerm
 
 # Terms in weekly
 TERM_MIN = 1    # 1 week
@@ -10,10 +11,24 @@ AMOUNT_MIN = 1000
 AMOUNT_MAX = 1000000
 
 
+class LoanTermSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LoanTerm
+        fields = ("id", "amount", "due_date", "status", "paid_amount", "paid_date")
+
+
 class LoanSerializer(serializers.ModelSerializer):
+    loan_terms = serializers.SerializerMethodField()
+
     class Meta:
         model = Loan
-        fields = ("id", "amount", "term", "state", "approved_date", "user", "approved_by")
+        fields = ("id", "amount", "term", "state", "approved_date", "user", "approved_by", "loan_terms")
+        read_only_fields = ("user", "approved_by", "loan_terms")
+
+    @extend_schema_field(LoanTermSerializer)
+    def get_loan_terms(self, obj):
+        instance = LoanTermSerializer(obj.loan, many=True).data
+        return instance if instance else None
 
 
 class LoanCreateInputSerializer(serializers.ModelSerializer):

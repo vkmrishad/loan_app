@@ -1,8 +1,11 @@
+from datetime import datetime, timedelta
+
+from django.db import transaction, IntegrityError
 from django.utils import timezone
 
 from drf_spectacular.utils import extend_schema
-
 from rest_framework import status
+
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -10,9 +13,10 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from apps.loans.choices import LoanState
-from apps.loans.models import Loan
-from apps.loans.serializers import LoanSerializer, LoanApproveInputSerializer, LoanCreateInputSerializer, \
-    LoanListQuerySerializer
+from apps.loans.models import Loan, LoanTerm
+from apps.loans.serializers import (
+    LoanSerializer, LoanApproveInputSerializer, LoanCreateInputSerializer, LoanListQuerySerializer
+)
 
 
 class LoanViewSet(ModelViewSet):
@@ -86,14 +90,60 @@ class LoanViewSet(ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
-        if serializer.is_valid(raise_exception=True):
-            # Partial update
-            self.perform_update(serializer)
+        try:
+            with transaction.atomic():
+                serializer = self.get_serializer(instance, data=request.data, partial=True)
+                if serializer.is_valid(raise_exception=True):
+                    # Partial update
+                    self.perform_update(serializer)
 
-            # Update approved_date and approved_by
-            instance.approved_date = timezone.now()
-            instance.approved_by = request.user
-            instance.save()
+                    if request.data.get('state') == LoanState.APPROVED:
+                        # Update approved_date and approved_by
+                        instance.approved_date = timezone.now()
+                        instance.approved_by = request.user
+                        instance.save()
 
-        return Response(serializer.data)
+                        # Create loan terms here (weekly)
+                        loan_amount = instance.amount
+                        loan_term = instance.term
+
+                        # Calculate loan term amount
+                        calculate_term_amount = round(loan_amount / loan_term, 2)
+                        final_amount_diff = round(loan_amount - (calculate_term_amount * loan_term), 2)
+
+                        loan_terms = list()
+                        due_date = instance.approved_date
+                        for term in range(loan_term):
+                            # Add diff to last payment
+                            if term == (loan_term - 1):
+                                calculate_term_amount = calculate_term_amount + final_amount_diff
+
+                            # Calculate due_date (weekly)
+                            due_date = due_date + timedelta(days=7)
+
+                            # For bulk create loan terms
+                            loan_terms.append(
+                                LoanTerm(
+                                    loan=instance,
+                                    amount=calculate_term_amount,
+                                    due_date=due_date
+                                )
+                            )
+                        # Bulk create loan terms
+                        LoanTerm.objects.bulk_create(loan_terms, batch_size=1000)
+                return Response(serializer.data)
+        except IntegrityError as e:
+            transaction.rollback()
+            return Response(
+               data={"error": str(e)},
+               status=status.HTTP_400_BAD_REQUEST
+           )
+
+    @extend_schema(request=LoanApproveInputSerializer)
+    @action(
+        methods=['post'],
+        detail=True,
+        url_path='loan-repayment'
+    )
+    def loan_payment(self, request, *args, **kwargs):
+        pass

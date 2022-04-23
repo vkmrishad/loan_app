@@ -1,4 +1,3 @@
-from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.db.models import CASCADE
@@ -16,9 +15,9 @@ class Loan(BaseModel):
     term = models.IntegerField(_("term"))
     state = models.CharField(_("state"), choices=LoanState.choices, max_length=30, default=LoanState.PENDING)
     approved_by = models.ForeignKey(
-        User, on_delete=CASCADE, verbose_name=_("approved_by"), null=True, blank=True, related_name="approved_by"
+        User, on_delete=CASCADE, verbose_name=_("approved by"), null=True, blank=True, related_name="approved_by"
     )
-    approved_date = models.DateTimeField(_("approved_date"), null=True, blank=True)
+    approved_date = models.DateTimeField(_("approved date"), null=True, blank=True)
 
     def __str__(self):
         return f"{self.user}, amount: {self.amount}, terms: {self.term}"
@@ -31,11 +30,12 @@ class Loan(BaseModel):
 class LoanTerm(BaseModel):
     loan = models.ForeignKey(Loan, on_delete=CASCADE, verbose_name=_("loan"), related_name="loan")
     amount = models.FloatField(_("amount"))
-    due_date = models.DateTimeField(_("due_date"), null=True, blank=True)
+    due_date = models.DateTimeField(_("due date"), null=True, blank=True)
     status = models.CharField(
         _("status"), choices=LoanTermStatus.choices, max_length=30, default=LoanTermStatus.PENDING
     )
-    payment_date = models.DateTimeField(_("payment_date"), null=True, blank=True)
+    paid_amount = models.FloatField(_("paid amount"), default=0)
+    paid_date = models.DateTimeField(_("paid date"), null=True, blank=True)
 
     def __str__(self):
         return f"{self.loan} -> amount: {self.amount}, due_date: {self.due_date}"
