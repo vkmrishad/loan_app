@@ -16,39 +16,115 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Loan',
+            name="Loan",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('updated', models.DateTimeField(auto_now=True)),
-                ('amount', models.FloatField(verbose_name='amount')),
-                ('term', models.IntegerField(verbose_name='term')),
-                ('state', models.CharField(choices=[('pending', 'Pending'), ('approved', 'Approved')], default='pending', max_length=30, verbose_name='state')),
-                ('approved_date', models.DateTimeField(blank=True, null=True, verbose_name='approved date')),
-                ('approved_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='approved_by', to=settings.AUTH_USER_MODEL, verbose_name='approved by')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='user', to=settings.AUTH_USER_MODEL, verbose_name='user')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created", models.DateTimeField(auto_now_add=True)),
+                ("updated", models.DateTimeField(auto_now=True)),
+                ("amount", models.FloatField(verbose_name="amount")),
+                ("term", models.IntegerField(verbose_name="term")),
+                (
+                    "state",
+                    models.CharField(
+                        choices=[("pending", "Pending"), ("approved", "Approved")],
+                        default="pending",
+                        max_length=30,
+                        verbose_name="state",
+                    ),
+                ),
+                (
+                    "approved_date",
+                    models.DateTimeField(
+                        blank=True, null=True, verbose_name="approved date"
+                    ),
+                ),
+                (
+                    "approved_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="approved_by",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="approved by",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="user",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="user",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Loan',
-                'verbose_name_plural': 'Loans',
+                "verbose_name": "Loan",
+                "verbose_name_plural": "Loans",
             },
         ),
         migrations.CreateModel(
-            name='LoanTerm',
+            name="LoanTerm",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created', models.DateTimeField(auto_now_add=True)),
-                ('updated', models.DateTimeField(auto_now=True)),
-                ('amount', models.FloatField(verbose_name='amount')),
-                ('due_date', models.DateTimeField(blank=True, null=True, verbose_name='due date')),
-                ('status', models.CharField(choices=[('pending', 'Pending'), ('paid', 'Paid')], default='pending', max_length=30, verbose_name='status')),
-                ('paid_amount', models.FloatField(default=0, verbose_name='paid amount')),
-                ('paid_date', models.DateTimeField(blank=True, null=True, verbose_name='paid date')),
-                ('loan', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='loan', to='loans.loan', verbose_name='loan')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created", models.DateTimeField(auto_now_add=True)),
+                ("updated", models.DateTimeField(auto_now=True)),
+                ("amount", models.FloatField(verbose_name="amount")),
+                (
+                    "due_date",
+                    models.DateTimeField(
+                        blank=True, null=True, verbose_name="due date"
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[("pending", "Pending"), ("paid", "Paid")],
+                        default="pending",
+                        max_length=30,
+                        verbose_name="status",
+                    ),
+                ),
+                (
+                    "paid_amount",
+                    models.FloatField(default=0, verbose_name="paid amount"),
+                ),
+                (
+                    "paid_date",
+                    models.DateTimeField(
+                        blank=True, null=True, verbose_name="paid date"
+                    ),
+                ),
+                (
+                    "loan",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="loan",
+                        to="loans.loan",
+                        verbose_name="loan",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Loan Term',
-                'verbose_name_plural': 'Loan Terms',
+                "verbose_name": "Loan Term",
+                "verbose_name_plural": "Loan Terms",
             },
         ),
     ]

@@ -10,8 +10,9 @@ User = get_user_model()
 
 class RegisterUserView(CreateAPIView):
     """
-        User registration endpoint
+    User registration endpoint
     """
+
     model = User
     permission_classes = [AllowAny]
     serializer_class = UserSerializer

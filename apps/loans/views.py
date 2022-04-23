@@ -12,21 +12,25 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from apps.loans.choices import LoanState
+from apps.loans.choices import LoanState, LoanTermStatus
 from apps.loans.models import Loan, LoanTerm
 from apps.loans.serializers import (
-    LoanSerializer, LoanApproveInputSerializer, LoanCreateInputSerializer, LoanListQuerySerializer
+    LoanSerializer,
+    LoanApproveInputSerializer,
+    LoanCreateInputSerializer,
+    LoanListQuerySerializer,
+    LoanRePaymentInputSerializer,
 )
 
 
 class LoanViewSet(ModelViewSet):
     queryset = Loan.objects.all()
     serializer_class = LoanSerializer
-    http_method_names = ['get', 'patch', 'post']
+    http_method_names = ["get", "patch", "post"]
     permission_classes = (IsAuthenticated,)
 
     def get_permissions(self):
-        if self.action in ['partial_update', 'approve_loan']:
+        if self.action in ["partial_update", "approve_loan"]:
             self.permission_classes = (IsAdminUser,)
         return super().get_permissions()
 
@@ -41,7 +45,7 @@ class LoanViewSet(ModelViewSet):
         query_serializer.is_valid(raise_exception=True)
         query_params = query_serializer.data
 
-        _all = query_params.get('all')
+        _all = query_params.get("all")
 
         if not _all:
             queryset = queryset.filter(user=request.user)
@@ -73,31 +77,37 @@ class LoanViewSet(ModelViewSet):
         return Response(serializer.data)
 
     @extend_schema(request=LoanApproveInputSerializer)
-    @action(
-        methods=['patch'],
-        detail=True,
-        url_path='approve-loan'
-    )
+    @action(methods=["patch"], detail=True, url_path="approve-loan")
     def approve_loan(self, request, *args, **kwargs):
         """
         Approve loan by admin
         """
         instance = self.get_object()
 
+        if instance.state == LoanState.PAID:
+            return Response(
+                data={
+                    "error": f"Loan is already {LoanState.PAID}, no action is possible"
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         if instance.state == LoanState.APPROVED:
             return Response(
                 data={"error": f"Loan is already {LoanState.APPROVED}"},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
             with transaction.atomic():
-                serializer = self.get_serializer(instance, data=request.data, partial=True)
+                serializer = self.get_serializer(
+                    instance, data=request.data, partial=True
+                )
                 if serializer.is_valid(raise_exception=True):
                     # Partial update
                     self.perform_update(serializer)
 
-                    if request.data.get('state') == LoanState.APPROVED:
+                    if request.data.get("state") == LoanState.APPROVED:
                         # Update approved_date and approved_by
                         instance.approved_date = timezone.now()
                         instance.approved_by = request.user
@@ -109,14 +119,18 @@ class LoanViewSet(ModelViewSet):
 
                         # Calculate loan term amount
                         calculate_term_amount = round(loan_amount / loan_term, 2)
-                        final_amount_diff = round(loan_amount - (calculate_term_amount * loan_term), 2)
+                        final_amount_diff = round(
+                            loan_amount - (calculate_term_amount * loan_term), 2
+                        )
 
                         loan_terms = list()
                         due_date = instance.approved_date
                         for term in range(loan_term):
                             # Add diff to last payment
                             if term == (loan_term - 1):
-                                calculate_term_amount = calculate_term_amount + final_amount_diff
+                                calculate_term_amount = (
+                                    calculate_term_amount + final_amount_diff
+                                )
 
                             # Calculate due_date (weekly)
                             due_date = due_date + timedelta(days=7)
@@ -126,7 +140,7 @@ class LoanViewSet(ModelViewSet):
                                 LoanTerm(
                                     loan=instance,
                                     amount=calculate_term_amount,
-                                    due_date=due_date
+                                    due_date=due_date,
                                 )
                             )
                         # Bulk create loan terms
@@ -134,16 +148,48 @@ class LoanViewSet(ModelViewSet):
                 return Response(serializer.data)
         except IntegrityError as e:
             transaction.rollback()
-            return Response(
-               data={"error": str(e)},
-               status=status.HTTP_400_BAD_REQUEST
-           )
+            return Response(data={"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-    @extend_schema(request=LoanApproveInputSerializer)
-    @action(
-        methods=['post'],
-        detail=True,
-        url_path='loan-repayment'
-    )
+    @extend_schema(request=LoanRePaymentInputSerializer)
+    @action(methods=["post"], detail=True, url_path="loan-repayment")
     def loan_payment(self, request, *args, **kwargs):
-        pass
+        """
+        Loan repayment
+        """
+        instance = self.get_object()
+        amount = request.data.get("amount", 0)
+
+        try:
+            with transaction.atomic():
+                loan_terms = instance.loan_term
+                # Check for pending loan terms
+                if loan_terms.filter(status=LoanTermStatus.PENDING).exists():
+                    for term in loan_terms:
+                        if term.status != LoanTermStatus.PAID:
+                            if amount != term.amount:
+                                return Response(
+                                    data={
+                                        "error": f"Loan repayment amount should be equal to {term.amount}"
+                                    },
+                                    status=status.HTTP_400_BAD_REQUEST,
+                                )
+                            term.status = LoanTermStatus.PAID
+                            term.paid_date = timezone.now()
+                            term.paid_amount = amount
+                            term.save()
+                            break
+                else:
+                    # Update only loan terms and loan is not paid status
+                    if (
+                        loan_terms.filter().exists()
+                        and instance.state != LoanState.PAID
+                    ):
+                        instance.state = LoanState.PAID
+                        instance.closed_date = timezone.now()
+                        instance.save()
+        except IntegrityError as e:
+            transaction.rollback()
+            return Response(data={"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = self.get_serializer(instance, many=False)
+        return Response(serializer.data)

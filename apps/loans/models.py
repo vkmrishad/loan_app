@@ -10,14 +10,24 @@ User = get_user_model()
 
 
 class Loan(BaseModel):
-    user = models.ForeignKey(User, on_delete=CASCADE, verbose_name=_("user"), related_name="user")
+    user = models.ForeignKey(
+        User, on_delete=CASCADE, verbose_name=_("user"), related_name="user"
+    )
     amount = models.FloatField(_("amount"))
     term = models.IntegerField(_("term"))
-    state = models.CharField(_("state"), choices=LoanState.choices, max_length=30, default=LoanState.PENDING)
+    state = models.CharField(
+        _("state"), choices=LoanState.choices, max_length=30, default=LoanState.PENDING
+    )
     approved_by = models.ForeignKey(
-        User, on_delete=CASCADE, verbose_name=_("approved by"), null=True, blank=True, related_name="approved_by"
+        User,
+        on_delete=CASCADE,
+        verbose_name=_("approved by"),
+        null=True,
+        blank=True,
+        related_name="approved_by",
     )
     approved_date = models.DateTimeField(_("approved date"), null=True, blank=True)
+    closed_date = models.DateTimeField(_("closed date"), null=True, blank=True)
 
     def __str__(self):
         return f"{self.user}, amount: {self.amount}, terms: {self.term}"
@@ -28,11 +38,16 @@ class Loan(BaseModel):
 
 
 class LoanTerm(BaseModel):
-    loan = models.ForeignKey(Loan, on_delete=CASCADE, verbose_name=_("loan"), related_name="loan")
+    loan = models.ForeignKey(
+        Loan, on_delete=CASCADE, verbose_name=_("loan"), related_name="loan_term"
+    )
     amount = models.FloatField(_("amount"))
     due_date = models.DateTimeField(_("due date"), null=True, blank=True)
     status = models.CharField(
-        _("status"), choices=LoanTermStatus.choices, max_length=30, default=LoanTermStatus.PENDING
+        _("status"),
+        choices=LoanTermStatus.choices,
+        max_length=30,
+        default=LoanTermStatus.PENDING,
     )
     paid_amount = models.FloatField(_("paid amount"), default=0)
     paid_date = models.DateTimeField(_("paid date"), null=True, blank=True)
