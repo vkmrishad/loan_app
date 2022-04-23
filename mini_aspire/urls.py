@@ -16,18 +16,17 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-from rest_framework.authtoken.views import obtain_auth_token
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularRedocView,
     SpectacularSwaggerView,
 )
 
-from apps.accounts.views import RegisterUserView
+from apps.accounts.views import RegisterUserView, CustomObtainAuthToken
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/auth/login/", obtain_auth_token, name="token_login"),
+    path("api/auth/login/", CustomObtainAuthToken.as_view(), name="token_login"),
     path("api/auth/register/", RegisterUserView.as_view(), name="register"),
     path("api/loans/", include("apps.loans.urls")),
     # Swagger
