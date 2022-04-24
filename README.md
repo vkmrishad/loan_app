@@ -43,6 +43,13 @@ Check Swagger/Redoc documantation after running server
     or
     $ ./manage.py test
 
+## SuperUser
+Create superuser to test admin feature
+
+    $ python manage.py createsuperuser
+    or
+    $ ./manage.py createsuperuser
+
 ## Version
 
 * Python: 3.8+
