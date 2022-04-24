@@ -109,6 +109,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+sample.env
+.envrc
 
 # Spyder project settings
 .spyderproject

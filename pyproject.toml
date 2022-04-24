@@ -10,6 +10,7 @@ Django = "3.2.13"
 djangorestframework = "3.13.1"
 drf-spectacular = "0.22.0"
 requests = "2.27.1"
+django-cors-headers = "3.11.0"
 
 [tool.poetry.dev-dependencies]
 
