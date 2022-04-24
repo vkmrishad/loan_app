@@ -1,10 +1,17 @@
 # loan_app
+API for Mini Aspire
 
 ![example workflow](https://github.com/vkmrishad/loan_app/actions/workflows/black.yaml/badge.svg)
 ![example workflow](https://github.com/vkmrishad/loan_app/actions/workflows/django-ci.yaml/badge.svg)
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 
+## Clone
 
+    git clone https://github.com/vkmrishad/loan_app.git
+    or
+    git clone git@github.com:vkmrishad/loan_app.git
+
+## Environment and Package Management
 Install Poetry
 
     $ pip install poetry
