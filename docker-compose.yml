@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_ENGINE='django.db.backends.postgresql_psycopg2'
+      - DATABASE_NAME=postgres
+      - POSTGRES_USER=postgres
+      - DATABASE_USER=postgres
+      - ALLOWED_HOSTS='127.0.0.1, localhost'
+      - CORS_ALLOW_ALL_ORIGINS=1
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000, https://localhost:3000
+    depends_on:
+      - db
