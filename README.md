@@ -27,6 +27,7 @@ Install Packages from Poetry
     $ poetry install
 
 NB: When using virtualenv, install from `$ pip install -r requirements.txt`.
+For environment variables follow `sample.env`
 
 ## Runserver
 
