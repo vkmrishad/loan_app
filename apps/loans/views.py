@@ -47,7 +47,7 @@ class LoanViewSet(ModelViewSet):
 
         _all = query_params.get("all")
 
-        if not _all:
+        if not _all or not request.user.is_staff:
             queryset = queryset.filter(user=request.user)
 
         page = self.paginate_queryset(queryset)
@@ -161,9 +161,17 @@ class LoanViewSet(ModelViewSet):
 
         try:
             with transaction.atomic():
-                loan_terms = instance.loan_term
+                loan_terms = instance.loan_term.filter(status=LoanTermStatus.PENDING)
                 # Check for pending loan terms
-                if loan_terms.filter(status=LoanTermStatus.PENDING).exists():
+                if loan_terms.exists():
+                    # Check for last payment and mark loan is paid
+                    if len(loan_terms) == 1:
+                        # Update loan state and closed_date
+                        instance.state = LoanState.PAID
+                        instance.closed_date = timezone.now()
+                        instance.save()
+
+                    # Loop loan term and address repayment and break loop after payment
                     for term in loan_terms:
                         if term.status != LoanTermStatus.PAID:
                             if amount != term.amount:
@@ -180,13 +188,19 @@ class LoanViewSet(ModelViewSet):
                             break
                 else:
                     # Update only loan terms and loan is not paid status
-                    if (
-                        loan_terms.filter().exists()
-                        and instance.state != LoanState.PAID
-                    ):
-                        instance.state = LoanState.PAID
-                        instance.closed_date = timezone.now()
-                        instance.save()
+                    if instance.loan_term.filter().exists():
+                        return Response(
+                            data={"error": "Loan is already fully paid"},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                    else:
+                        return Response(
+                            data={
+                                "error": "Loan is not approved or loan terms does not exists"
+                            },
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+
         except IntegrityError as e:
             transaction.rollback()
             return Response(data={"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

@@ -67,22 +67,22 @@ class LoanCreateInputSerializer(serializers.ModelSerializer):
     def validate_amount(self, amount):
         if amount < AMOUNT_MIN:
             raise serializers.ValidationError(
-                {"amount": f"amount($) should be greater than {AMOUNT_MIN}"}
+                f"amount($) should be greater than or equal {AMOUNT_MIN}"
             )
         if amount > AMOUNT_MAX:
             raise serializers.ValidationError(
-                {"amount": f"amount($) should be less than {AMOUNT_MAX}"}
+                f"amount($) should be less than or equal {AMOUNT_MAX}"
             )
         return amount
 
     def validate_term(self, term):
         if term < TERM_MIN:
             raise serializers.ValidationError(
-                {"term": f"term(weekly) should be greater than {TERM_MIN}"}
+                f"term(weekly) should be greater than or equal {TERM_MIN}"
             )
         if term > TERM_MAX:
             raise serializers.ValidationError(
-                {"term": f"term(weekly) should be less than {TERM_MAX}"}
+                f"term(weekly) should be less than or equal {TERM_MAX}"
             )
         return term
 
