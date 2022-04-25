@@ -36,6 +36,7 @@ For environment variables follow `sample.env`
     $ ./manage.py runserver
 
 Access server: http://127.0.0.1:8000
+Access Admin: http://127.0.0.1:8000/admin/
 
 ## Runserver using docker
 Check this documentation to run with docker, https://docs.docker.com/samples/django/
