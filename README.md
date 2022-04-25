@@ -62,4 +62,5 @@ Create superuser to test admin feature
 ## Version
 
 * Python: 3.8+
+* Django: 3.2+
 * Postgres 12+ / Sqlite3
