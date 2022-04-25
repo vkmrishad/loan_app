@@ -37,7 +37,11 @@ class LoanViewSet(ModelViewSet):
     @extend_schema(parameters=[LoanListQuerySerializer])
     def list(self, request, *args, **kwargs):
         """
-        List loans
+        List all loans endpoint.
+
+        query_param all:
+        - true: Show all loans.
+        - false: Only user specific loans.
         """
         queryset = self.get_queryset()
 
@@ -61,12 +65,18 @@ class LoanViewSet(ModelViewSet):
     @extend_schema(request=LoanCreateInputSerializer)
     def create(self, request, *args, **kwargs):
         """
-        Create Loan
+        Create a new loan endpoint.
         """
         self.serializer_class = LoanCreateInputSerializer
         return super().create(request, *args, **kwargs)
 
     def retrieve(self, request, *args, **kwargs):
+        """
+        Get a loan  details endpoint.
+
+        - User check with restrict user to view others loan details.
+        - Admin can access any loan details.
+        """
         queryset = self.get_object()
 
         # Check user and staff status
@@ -80,7 +90,10 @@ class LoanViewSet(ModelViewSet):
     @action(methods=["patch"], detail=True, url_path="approve-loan")
     def approve_loan(self, request, *args, **kwargs):
         """
-        Approve loan by admin
+        Approve loan by admin endpoint.
+
+        - Only admin have access to approve a loan.
+        - Loan terms will be created on loan approval.
         """
         instance = self.get_object()
 
@@ -154,7 +167,7 @@ class LoanViewSet(ModelViewSet):
     @action(methods=["post"], detail=True, url_path="loan-repayment")
     def loan_payment(self, request, *args, **kwargs):
         """
-        Loan repayment
+        Loan repayment endpoint.
         """
         instance = self.get_object()
         amount = request.data.get("amount", 0)

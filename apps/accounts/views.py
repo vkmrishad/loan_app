@@ -12,7 +12,7 @@ User = get_user_model()
 
 class RegisterUserView(CreateAPIView):
     """
-    User registration endpoint
+    User registration endpoint.
     """
 
     model = User
@@ -22,7 +22,7 @@ class RegisterUserView(CreateAPIView):
 
 class CustomObtainAuthToken(ObtainAuthToken):
     """
-    Override ObtainAuthToken to fix default parser_classes
+    Override ObtainAuthToken to fix default parser_classes.
     """
 
     parser_classes = (parsers.JSONParser,)
